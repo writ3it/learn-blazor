@@ -5,5 +5,27 @@ services:
       context: ./app
       dockerfile: ../.docker/app/Dockerfile
     entrypoint: dotnet BlazorTodo.dll
+    networks:
+      - blazortodo-net
     ports:
       - 8080:8080
+    profiles:
+      - "prod"
+
+  database:
+    image: mariadb
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: yes
+      MYSQL_DATABASE: todolist
+      MYSQL_USER: blazorapp
+      MYSQL_PASSWORD: blazorpwd
+    restart: always
+    networks:
+      - blazortodo-net
+    profiles:
+      - "dev"
+      - "prod"
+
+networks:
+  blazortodo-net:
+    
