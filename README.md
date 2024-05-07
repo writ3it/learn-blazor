@@ -12,5 +12,5 @@ $ docker compose up -d
 or (linux)
 
 ```shell
-$ ./bin/up.sh
+$ make up
 ```
