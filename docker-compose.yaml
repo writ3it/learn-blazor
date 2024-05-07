@@ -1,0 +1,9 @@
+
+services:
+  app:
+    build:
+      context: ./app
+      dockerfile: ../.docker/app/Dockerfile
+    entrypoint: dotnet BlazorTodo.dll
+    ports:
+      - 8080:8080
