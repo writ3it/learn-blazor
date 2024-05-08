@@ -99,6 +99,7 @@
     {
         if (ViewModel != null){
             ViewModel.PropertyChanged -= OnPropertyChangedHandler;
+            ViewModel.Dispose();
             ViewModel = null;
         }
     }

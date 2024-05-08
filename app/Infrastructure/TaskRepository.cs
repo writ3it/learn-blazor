@@ -8,16 +8,26 @@ namespace BlazorTodo.Infrastructure;
 class TaskRepository(IDbContextFactory<TodoListContext> contextFactory) : ITaskRepository{
     private readonly IDbContextFactory<TodoListContext> contextFactory = contextFactory;
 
+    private TodoListContext? context = null;
+
     public async System.Threading.Tasks.Task Append(Domain.Task task)
     {
-        using var context = contextFactory.CreateDbContext();
+        ensureContext();
         context.tasks.Add(task);
         await context.SaveChangesAsync();
     }
 
+    private void ensureContext()
+    {
+        if (context != null){
+            return;
+        }
+        context = contextFactory.CreateDbContext();
+    }
+
     public async Task<List<Domain.Task>> GetDoneTasks()
     {
-        using var context = contextFactory.CreateDbContext();
+        ensureContext();
         return await (from c in context.tasks
                 where c.IsDone == true
                 select c).ToListAsync();
@@ -25,7 +35,7 @@ class TaskRepository(IDbContextFactory<TodoListContext> contextFactory) : ITaskR
 
     public async Task<List<Domain.Task>> GetTodoTasks()
     {
-        using var context = contextFactory.CreateDbContext();
+        ensureContext();
         return await (from c in context.tasks
                 where c.IsDone == false
                 select c).ToListAsync();
@@ -33,7 +43,16 @@ class TaskRepository(IDbContextFactory<TodoListContext> contextFactory) : ITaskR
 
     public async System.Threading.Tasks.Task SaveChanges()
     {
-        using var context = contextFactory.CreateDbContext();
+        ensureContext();
         await context.SaveChangesAsync();
     }
+
+    void IDisposable.Dispose()
+    {
+        if (context != null){
+            context.Dispose();
+        }
+        context = null;
+    }
+
 }

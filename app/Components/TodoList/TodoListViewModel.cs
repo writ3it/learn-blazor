@@ -7,7 +7,7 @@ using Mysqlx.Expr;
 namespace BlazorTodo.Components.TaskList;
 
 
-public class TodoListViewModel(ITaskRepository repository) : INotifyPropertyChanged
+public class TodoListViewModel(ITaskRepository repository) : INotifyPropertyChanged, IDisposable
 {
     private readonly ITaskRepository repository = repository;
 
@@ -50,5 +50,10 @@ public class TodoListViewModel(ITaskRepository repository) : INotifyPropertyChan
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TodoList)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(DoneList)));
         await repository.SaveChanges();
+    }
+
+    public void Dispose()
+    {
+        repository.Dispose();   
     }
 }
