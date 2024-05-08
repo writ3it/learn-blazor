@@ -1,0 +1,119 @@
+﻿@implements IDisposable;
+@rendermode InteractiveServer
+@using System.Collections.ObjectModel;
+@using BlazorTodo.Components.TaskList
+@using System.ComponentModel
+
+@inject Domain.ITaskRepository Repository;
+
+
+<div class="card">
+    <div class="card-header">
+        Your scheduled tasks
+    </div>
+    <ul class="list-group list-group-flush">
+        @if (ViewModel == null){
+            <div style="text-align: center; padding:10px;"><h3>Loading...</h3></div>
+        } 
+        @if (ViewModel != null && ViewModel.IsEmpty){
+            <div style="text-align: center; padding:10px;"><h3>Great job! All tasks are done.</h3></div>
+        }
+        @if (ViewModel != null && !ViewModel.IsEmpty){
+            @foreach(var task in ViewModel.TodoList){
+                <li class="list-group-item">
+                    <div class=" form-check">
+                        <input class="form-check-input" @key=task checked="@(task.IsDone)" type="checkbox" @onchange=@(()=>OnTaskToggle(task))/>
+                        @task.Title
+                    </div>
+                </li>
+            }
+        }
+        <li class="list-group-item">
+            <div class="input-group">
+                <input @bind="newTaskTitle" class="form-control" />
+                <button @onclick=OnAddTask class="btn btn-success">add</button>
+            </div>
+        </li>
+    </ul>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        Your success list. Great job!
+    </div>
+    <ul class="list-group list-group-flush">
+         @if (ViewModel == null){
+            <h2>Loading...</h2>
+        } 
+        @if (ViewModel != null && !ViewModel.IsEmpty){
+            @foreach(var task in ViewModel.DoneList){
+                <li class="list-group-item">
+                    <div class=" form-check">
+                        <input class="form-check-input" @key=task checked="@(task.IsDone)" type="checkbox" @onchange=@(()=>OnTaskToggle(task))/>
+                        @task.Title
+                    </div>
+                </li>
+            }
+        }
+    </ul>
+</div>
+
+
+@code {
+
+
+    [Parameter]
+    public EventCallback<Domain.Task> OnTaskCreate { get; set; }
+
+    [Parameter]
+    public EventCallback<Domain.Task> OnTaskUpdate { get; set; }
+
+    [Parameter]
+    public EventCallback<Domain.Task> OnTaskRemoved { get; set; }
+
+    [Parameter]
+    public TodoListViewModel? ViewModel {get; set; } = null;
+
+    [Parameter]
+    public bool Test {get; set;} = false;
+
+
+    private string newTaskTitle = "";
+
+    protected override async Task OnInitializedAsync(){
+        ViewModel = new TodoListViewModel(Repository);
+        ViewModel.PropertyChanged += OnPropertyChangedHandler;
+        await ViewModel.Initialize();
+        StateHasChanged();
+    }
+
+    async void OnPropertyChangedHandler(object sender, PropertyChangedEventArgs e)
+    {
+        await InvokeAsync(() =>
+        {
+            StateHasChanged();
+        });
+    }
+
+    void IDisposable.Dispose()
+    {
+        if (ViewModel != null){
+            ViewModel.PropertyChanged -= OnPropertyChangedHandler;
+            ViewModel = null;
+        }
+    }
+
+    private async System.Threading.Tasks.Task OnAddTask(){
+        if (string.IsNullOrWhiteSpace(newTaskTitle)){
+            return;
+        }
+        await ViewModel?.AddNewTask(newTaskTitle);
+        newTaskTitle="";
+        StateHasChanged();
+    }
+
+    private async System.Threading.Tasks.Task OnTaskToggle(Domain.Task task){
+        task.Toggle();
+        await ViewModel?.TaskUpdated(task);
+    }
+}

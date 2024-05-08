@@ -1,5 +1,7 @@
 using BlazorTodo.Components;
 using BlazorTodo.DAL;
+using BlazorTodo.Domain;
+using BlazorTodo.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -10,7 +12,9 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services
-    .AddDbContext<TodoListContext>(options => options.UseMySQL(builder.Configuration.GetConnectionString("TodoListContext")));
+    .AddDbContextFactory<TodoListContext>(options => options.UseMySQL(builder.Configuration.GetConnectionString("TodoListContext")));
+
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 
 var app = builder.Build();
 
